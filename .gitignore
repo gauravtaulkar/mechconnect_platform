@@ -1,0 +1,14 @@
+# Node
+node_modules/
+build/
+
+# Java
+target/
+*.class
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
