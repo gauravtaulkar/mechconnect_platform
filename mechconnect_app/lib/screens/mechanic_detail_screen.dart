@@ -3,9 +3,7 @@ import '../models/mechanic.dart';
 import 'booking_screen.dart';
 
 class MechanicDetailScreen extends StatelessWidget {
-  // mechanic object passed from home screen when user taps a card
   final Mechanic mechanic;
-
   const MechanicDetailScreen({super.key, required this.mechanic});
 
   @override
@@ -17,69 +15,48 @@ class MechanicDetailScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // mechanic name
-            Text(
-              mechanic.name,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(mechanic.name,
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-
-            // detail rows
-            _detailRow(Icons.store, mechanic.shopName),
-            _detailRow(Icons.location_city, mechanic.city),
-            _detailRow(Icons.map, mechanic.street),
-            _detailRow(Icons.phone, mechanic.phone),
-            _detailRow(Icons.build, mechanic.expertise),
-            _detailRow(Icons.work, '${mechanic.experience} years experience'),
-            _detailRow(Icons.access_time,
+            _row(Icons.store, mechanic.shopName),
+            _row(Icons.location_city, mechanic.city),
+            _row(Icons.map, mechanic.street),
+            _row(Icons.phone, mechanic.phone),
+            _row(Icons.build, mechanic.expertise),
+            _row(Icons.work, '${mechanic.experience} years experience'),
+            _row(Icons.access_time,
                 'Open: ${mechanic.openingTime} — Close: ${mechanic.closingTime}'),
-
             const SizedBox(height: 8),
-
-            // availability badge
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: mechanic.available ? Colors.green : Colors.red,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                mechanic.available ? 'Available' : 'Not Available',
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text(mechanic.available ? 'Available' : 'Not Available',
+                  style: const TextStyle(color: Colors.white)),
             ),
-
-            const Spacer(), // pushes button to bottom
-
-            // book now button
+            const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: mechanic.available
                     ? () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
+                        context,
+                        MaterialPageRoute(
                             builder: (_) =>
-                                BookingScreen(mechanic: mechanic),
-                          ),
-                        )
-                    : null, // disabled if mechanic not available
+                                BookingScreen(mechanic: mechanic)))
+                    : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  'Book Now',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 16)),
+                child: const Text('Book Now',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ),
           ],
@@ -88,9 +65,7 @@ class MechanicDetailScreen extends StatelessWidget {
     );
   }
 
-  // reusable row widget — icon + text
-  // this is a helper method, not a full widget
-  Widget _detailRow(IconData icon, String text) {
+  Widget _row(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(

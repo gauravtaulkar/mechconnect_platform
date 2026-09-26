@@ -18,15 +18,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository,
-                       JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder) {
+                        JwtUtil jwtUtil,
+                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
 
     public AuthResponseDTO register(RegisterRequestDTO dto) {
-
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalStateException("Email already registered");
         }
@@ -40,11 +39,10 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponseDTO(token, user.getRole().name());
+        return new AuthResponseDTO(token, user.getRole().name(), user.getName());
     }
 
     public AuthResponseDTO login(AuthRequestDTO dto) {
-
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new IllegalStateException("Invalid email or password"));
 
@@ -53,6 +51,11 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponseDTO(token, user.getRole().name());
+        return new AuthResponseDTO(token, user.getRole().name(), user.getName());
+    }
+
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
     }
 }

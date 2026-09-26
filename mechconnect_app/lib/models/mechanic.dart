@@ -32,18 +32,18 @@ class Mechanic {
   factory Mechanic.fromJson(Map<String, dynamic> json) {
     return Mechanic(
       id: json['id'],
-      name: json['name'],
-      shopName: json['shopName'],
-      city: json['city'],
-      street: json['street'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      phone: json['phone'],
-      experience: json['experience'],
-      expertise: json['expertise'],
-      available: json['available'],
-      openingTime: json['openingTime'],
-      closingTime: json['closingTime'],
+      name: json['name'] ?? '',
+      shopName: json['shopName'] ?? '',
+      city: json['city'] ?? '',
+      street: json['street'] ?? '',
+      latitude: (json['latitude'] ?? 0).toDouble(),
+      longitude: (json['longitude'] ?? 0).toDouble(),
+      phone: json['phone'] ?? '',
+      experience: json['experience'] ?? 0,
+      expertise: json['expertise'] ?? '',
+      available: json['available'] ?? false,
+      openingTime: json['openingTime']?.toString() ?? '09:00:00',
+      closingTime: json['closingTime']?.toString() ?? '18:00:00',
     );
   }
 }

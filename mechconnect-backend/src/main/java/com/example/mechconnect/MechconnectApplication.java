@@ -11,5 +11,4 @@ public class MechconnectApplication {
     public static void main(String[] args) {
         SpringApplication.run(MechconnectApplication.class, args);
     }
-
 }
