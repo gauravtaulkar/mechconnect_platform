@@ -40,10 +40,27 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- MySQL driver — swap for your DB of choice -->
+        <!-- NEW: exposes /actuator/health, used by Docker's HEALTHCHECK and
+             by Render to know the container actually started successfully. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- MySQL driver — used for local dev by default -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- NEW: PostgreSQL driver — most free cloud hosts (Render included)
+             offer free managed Postgres, not MySQL. Having both on the
+             classpath means you switch databases with zero code changes,
+             just a different spring.datasource.url. -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 

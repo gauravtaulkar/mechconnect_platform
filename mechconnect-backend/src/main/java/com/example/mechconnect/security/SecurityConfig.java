@@ -33,22 +33,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                // Browsing mechanics/search is public — a customer shouldn't
-                // need to log in just to see who's nearby.
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/mechanics/**").permitAll()
-                .anyRequest().authenticated())
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/**").permitAll()
+            
+            // Actuator health check must be publicly accessible
+            // so Docker/Render can verify that the backend is running.
+            .requestMatchers("/actuator/health").permitAll()
+            
+            // Browsing mechanics/search is public — a customer shouldn't
+            // need to log in just to see who's nearby.
+            .requestMatchers(
+                org.springframework.http.HttpMethod.GET,
+                "/api/mechanics/**"
+            ).permitAll()
+            
+            .anyRequest().authenticated())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+}
 
     private CorsConfigurationSource corsConfigurationSource() {
         return request -> {
