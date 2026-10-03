@@ -12,6 +12,9 @@ public class Booking {
 
     private Long mechanicId;
 
+    // Links this booking to the logged-in customer
+    private Long customerUserId;
+
     private String customerName;
     private String customerPhone;
     private String bikeModel;
@@ -21,26 +24,71 @@ public class Booking {
 
     public Booking() {}
 
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getMechanicId() { return mechanicId; }
-    public void setMechanicId(Long mechanicId) { this.mechanicId = mechanicId; }
+    public Long getMechanicId() {
+        return mechanicId;
+    }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public void setMechanicId(Long mechanicId) {
+        this.mechanicId = mechanicId;
+    }
 
-    public String getCustomerPhone() { return customerPhone; }
-    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
+    public Long getCustomerUserId() {
+        return customerUserId;
+    }
 
-    public String getBikeModel() { return bikeModel; }
-    public void setBikeModel(String bikeModel) { this.bikeModel = bikeModel; }
+    public void setCustomerUserId(Long customerUserId) {
+        this.customerUserId = customerUserId;
+    }
 
-    public LocalDateTime getBookingTime() { return bookingTime; }
-    public void setBookingTime(LocalDateTime bookingTime) { this.bookingTime = bookingTime; }
+    public String getCustomerName() {
+        return customerName;
+    }
 
-    public String getProblemDescription() { return problemDescription; }
-    public void setProblemDescription(String problemDescription) { this.problemDescription = problemDescription; }
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getBikeModel() {
+        return bikeModel;
+    }
+
+    public void setBikeModel(String bikeModel) {
+        this.bikeModel = bikeModel;
+    }
+
+    public LocalDateTime getBookingTime() {
+        return bookingTime;
+    }
+
+    public void setBookingTime(LocalDateTime bookingTime) {
+        this.bookingTime = bookingTime;
+    }
+
+    public String getProblemDescription() {
+        return problemDescription;
+    }
+
+    public void setProblemDescription(String problemDescription) {
+        this.problemDescription = problemDescription;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

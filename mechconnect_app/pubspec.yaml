@@ -9,11 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.0
-  # FIX: added so the login token survives app restarts instead of living
-  # only in an in-memory static variable (which previously meant every
-  # restart silently logged you out of every authenticated call, even
-  # though nothing on screen told you that).
+
+  http: ^1.5.0
   shared_preferences: ^2.2.3
   cupertino_icons: ^1.0.6
 

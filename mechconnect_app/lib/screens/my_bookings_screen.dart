@@ -10,34 +10,48 @@ class MyBookingsScreen extends StatefulWidget {
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
-  final phoneController = TextEditingController();
   List<Booking> bookings = [];
-  bool isLoading = false;
-  bool hasSearched = false;
+  bool isLoading = true;
   String errorMessage = '';
 
-  Future<void> fetchBookings() async {
-    if (phoneController.text.trim().isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    fetchBookings();
+  }
 
+  Future<void> fetchBookings() async {
     setState(() {
       isLoading = true;
-      hasSearched = true;
       errorMessage = '';
-      bookings = [];
     });
 
     try {
-      final result = await ApiService.getMyBookings(phoneController.text.trim());
-      setState(() => bookings = result);
-      if (bookings.isEmpty) {
-        setState(() => errorMessage = 'No bookings found for this number');
-      }
+      final result = await ApiService.getMyBookings();
+
+      if (!mounted) return;
+
+      setState(() {
+        bookings = result;
+      });
     } on ApiException catch (e) {
-      setState(() => errorMessage = e.message);
+      if (!mounted) return;
+
+      setState(() {
+        errorMessage = e.message;
+      });
     } catch (e) {
-      setState(() => errorMessage = 'Could not connect to server');
+      if (!mounted) return;
+
+      setState(() {
+        errorMessage = 'Could not connect to server';
+      });
     } finally {
-      setState(() => isLoading = false);
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -66,136 +80,168 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
+        child: _buildBody(),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Your phone number',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.phone),
-                    ),
-                    onSubmitted: (_) => fetchBookings(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: isLoading ? null : fetchBookings,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 12),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.search, color: Colors.white),
-                ),
-              ],
+            const Icon(
+              Icons.error_outline,
+              size: 50,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            if (errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(errorMessage,
-                    style: const TextStyle(color: Colors.red)),
-              ),
-            if (!hasSearched && !isLoading)
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'Enter the phone number you booked with to see your bookings.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = bookings[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  booking.bikeModel,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: statusColor(booking.status)
-                                        .withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    booking.status,
-                                    style: TextStyle(
-                                        color: statusColor(booking.status),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(Icons.access_time,
-                                    size: 14, color: Colors.grey),
-                                const SizedBox(width: 4),
-                                Text(
-                                  booking.bookingTime,
-                                  style: const TextStyle(
-                                      color: Colors.grey, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                            if (booking.problemDescription.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.notes,
-                                      size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      booking.problemDescription,
-                                      style: const TextStyle(
-                                          color: Colors.grey, fontSize: 12),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            ElevatedButton(
+              onPressed: fetchBookings,
+              child: const Text('Retry'),
+            ),
           ],
         ),
+      );
+    }
+
+    if (bookings.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: fetchBookings,
+        child: ListView(
+          children: const [
+            SizedBox(height: 200),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.calendar_month_outlined,
+                    size: 60,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'You have no bookings yet.',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: fetchBookings,
+      child: ListView.builder(
+        itemCount: bookings.length,
+        itemBuilder: (context, index) {
+          final booking = bookings[index];
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        booking.bikeModel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor(booking.status)
+                              .withOpacity(0.15),
+                          borderRadius:
+                              BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          booking.status,
+                          style: TextStyle(
+                            color: statusColor(booking.status),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        booking.bookingTime,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (booking.problemDescription.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.notes,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            booking.problemDescription,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

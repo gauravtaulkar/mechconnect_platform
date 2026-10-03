@@ -14,7 +14,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByCustomerPhone(String customerPhone);
 
+    List<Booking> findByCustomerUserIdOrderByBookingTimeDesc(Long customerUserId);
+
     boolean existsByMechanicIdAndBookingTime(Long mechanicId, LocalDateTime bookingTime);
 
-    List<Booking> findByMechanicIdAndBookingTimeBetween(Long mechanicId, LocalDateTime start, LocalDateTime end);
+    List<Booking> findByMechanicIdAndBookingTimeBetween(
+            Long mechanicId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 }

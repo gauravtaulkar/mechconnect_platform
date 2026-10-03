@@ -32,14 +32,23 @@ public class BookingController {
     // entity, and maps it into a Booking server-side (status is always set
     // to PENDING here, never trusted from the client).
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@Valid @RequestBody BookingRequestDTO dto) {
+    public ResponseEntity<Booking> createBooking(
+            @Valid @RequestBody BookingRequestDTO dto,
+            Authentication authentication) {
+
         Booking booking = new Booking();
+
+        User user = authService.getByEmail(authentication.getName());
+
+        booking.setCustomerUserId(user.getId());
+
         booking.setMechanicId(dto.getMechanicId());
         booking.setCustomerName(dto.getCustomerName());
         booking.setCustomerPhone(dto.getCustomerPhone());
         booking.setBikeModel(dto.getBikeModel());
         booking.setBookingTime(dto.getBookingTime());
         booking.setProblemDescription(dto.getProblemDescription());
+
         return ResponseEntity.ok(bookingService.createBooking(booking));
     }
 
@@ -47,6 +56,12 @@ public class BookingController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<Booking> getAllBookings() {
         return bookingService.getAllBookings();
+    }
+
+    @GetMapping("/customer/me")
+    @PreAuthorize("hasRole('USER')")
+    public List<Booking> getMyCustomerBookings(Authentication authentication) {
+        return bookingService.getMyCustomerBookings(currentUserId(authentication));
     }
 
     // FIX: only the mechanic who owns the shop (or an ADMIN) can change a

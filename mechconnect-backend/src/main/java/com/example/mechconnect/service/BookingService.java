@@ -24,6 +24,10 @@ public class BookingService {
         this.bookingRepository = bookingRepository;
         this.mechanicRepository = mechanicRepository;
     }
+    
+    public List<Booking> getMyCustomerBookings(Long customerUserId) {
+    return bookingRepository.findByCustomerUserIdOrderByBookingTimeDesc(customerUserId);
+    }
 
     public Booking createBooking(Booking booking) {
         Mechanic mechanic = mechanicRepository
