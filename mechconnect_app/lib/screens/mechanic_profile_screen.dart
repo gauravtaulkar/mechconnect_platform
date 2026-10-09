@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/mechanic.dart';
 import '../services/api_service.dart';
+import 'package:latlong2/latlong.dart';
+import 'shop_location_picker_screen.dart';
 
 // NEW SCREEN — this did not exist before. The backend already had
 // POST /api/mechanics (and now the safer POST /api/mechanics/me) to create
@@ -39,6 +41,20 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
 
   bool isSaving = false;
   String errorMessage = '';
+  double? selectedLatitude;
+  double? selectedLongitude;
+
+  @override
+  void initState() {
+   super.initState();
+
+    if (widget.existing != null &&
+        widget.existing!.latitude != 0 &&
+        widget.existing!.longitude != 0) {
+      selectedLatitude = widget.existing!.latitude;
+      selectedLongitude = widget.existing!.longitude;
+    }
+  }
 
   static TimeOfDay? _parseTime(String? raw) {
     if (raw == null) return null;
@@ -69,47 +85,86 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
     }
   }
 
-  Future<void> save() async {
-    if (nameController.text.trim().isEmpty ||
-        shopNameController.text.trim().isEmpty ||
-        cityController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty) {
-      setState(() => errorMessage = 'Name, shop name, city and phone are required');
-      return;
-    }
+  Future<void> pickShopLocation() async {
+  final result = await Navigator.push<LatLng>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ShopLocationPickerScreen(
+        initialLatitude: selectedLatitude,
+        initialLongitude: selectedLongitude,
+      ),
+    ),
+  );
 
+  if (result != null) {
     setState(() {
-      isSaving = true;
-      errorMessage = '';
+      selectedLatitude = result.latitude;
+      selectedLongitude = result.longitude;
     });
+  }
+}
 
-    try {
-      await ApiService.saveMyMechanicProfile(
-        name: nameController.text.trim(),
-        shopName: shopNameController.text.trim(),
-        city: cityController.text.trim(),
-        street: streetController.text.trim(),
-        latitude: 0,
-        longitude: 0,
-        phone: phoneController.text.trim(),
-        experience: int.tryParse(experienceController.text.trim()) ?? 0,
-        expertise: expertiseController.text.trim(),
-        available: available,
-        openingTime: _formatTime(openingTime),
-        closingTime: _formatTime(closingTime),
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Shop profile saved'), backgroundColor: Colors.green));
-      Navigator.pop(context, true);
-    } on ApiException catch (e) {
-      setState(() => errorMessage = e.message);
-    } catch (e) {
-      setState(() => errorMessage = 'Could not connect to server');
-    } finally {
-      if (mounted) setState(() => isSaving = false);
+  Future<void> save() async {
+  if (nameController.text.trim().isEmpty ||
+      shopNameController.text.trim().isEmpty ||
+      cityController.text.trim().isEmpty ||
+      phoneController.text.trim().isEmpty) {
+    setState(() => errorMessage =
+        'Name, shop name, city and phone are required');
+    return;
+  }
+
+  // Shop location is required
+  if (selectedLatitude == null || selectedLongitude == null) {
+    setState(() => errorMessage =
+        'Please select your shop location on the map');
+    return;
+  }
+
+  setState(() {
+    isSaving = true;
+    errorMessage = '';
+  });
+
+  try {
+    await ApiService.saveMyMechanicProfile(
+      name: nameController.text.trim(),
+      shopName: shopNameController.text.trim(),
+      city: cityController.text.trim(),
+      street: streetController.text.trim(),
+
+      // Use the location selected on the map
+      latitude: selectedLatitude!,
+      longitude: selectedLongitude!,
+
+      phone: phoneController.text.trim(),
+      experience: int.tryParse(experienceController.text.trim()) ?? 0,
+      expertise: expertiseController.text.trim(),
+      available: available,
+      openingTime: _formatTime(openingTime),
+      closingTime: _formatTime(closingTime),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Shop profile saved'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    Navigator.pop(context, true);
+  } on ApiException catch (e) {
+    setState(() => errorMessage = e.message);
+  } catch (e) {
+    setState(() => errorMessage = 'Could not connect to server');
+  } finally {
+    if (mounted) {
+      setState(() => isSaving = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -140,15 +195,75 @@ class _MechanicProfileScreenState extends State<MechanicProfileScreen> {
                     labelText: 'City', border: OutlineInputBorder())),
             const SizedBox(height: 12),
             TextField(
-                controller: streetController,
-                decoration: const InputDecoration(
-                    labelText: 'Street / Address', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
-            TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                    labelText: 'Phone', border: OutlineInputBorder())),
+    controller: streetController,
+    decoration: const InputDecoration(
+        labelText: 'Street / Address',
+        border: OutlineInputBorder())),
+const SizedBox(height: 12),
+
+// ============================================================
+// SHOP LOCATION
+// ============================================================
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    border: Border.all(
+      color: selectedLatitude != null
+          ? Colors.green
+          : Colors.orange,
+    ),
+    borderRadius: BorderRadius.circular(8),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Icon(
+            Icons.location_on,
+            color: selectedLatitude != null
+                ? Colors.green
+                : Colors.orange,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              selectedLatitude != null
+                  ? 'Shop location selected'
+                  : 'Shop location not selected',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: pickShopLocation,
+          icon: const Icon(Icons.map),
+          label: Text(
+            selectedLatitude != null
+                ? 'Change Shop Location'
+                : 'Select Shop Location',
+          ),
+        ),
+      ),
+    ],
+  ),
+),
+
+const SizedBox(height: 12),
+
+TextField(
+    controller: phoneController,
+    keyboardType: TextInputType.phone,
+    decoration: const InputDecoration(
+        labelText: 'Phone',
+        border: OutlineInputBorder())),
             const SizedBox(height: 12),
             TextField(
                 controller: experienceController,
